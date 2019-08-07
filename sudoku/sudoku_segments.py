@@ -1,4 +1,4 @@
-import sudoku.num_square as sq
+import num_square as sq
 import random
 
 class gameBoard(object):
@@ -22,8 +22,8 @@ class gameBoard(object):
     def set_cols(self):
         num_index = 1
         for count, tile in enumerate(self.board_list):
-            row_num = 's' + str(num_index)
-            self.row_dict[row_num].append(tile)
+            col_num = 'c' + str(num_index)
+            self.col_dict[col_num].append(tile)
             num_index += 1
             if (count+1) % 9 == 0:
                 num_index = 1
@@ -31,8 +31,8 @@ class gameBoard(object):
     def set_squares(self):
         num_index = 1
         for count, tile in enumerate(self.board_list):
-            row_num = 's' + str(num_index)
-            self.row_dict[row_num].append(tile)
+            square_num = 's' + str(num_index)
+            self.square_dict[square_num].append(tile)
             if (count+1) % 3 == 0:
                 num_index += 1
             if (count+1) % 9 == 0:
@@ -43,12 +43,15 @@ class gameBoard(object):
         self.segment_keys = [x for x in self.row_dict.keys()]
         self.segment_keys.extend([x for x in self.col_dict.keys()])
         self.segment_keys.extend([x for x in self.square_dict.keys()])
-        self.set_rows
-        self.set_cols
-        self.set_squares
-        segment_index = random.randint(0, len(self.segment_keys)-1)
-        segment = self.segment_keys.pop(segment_index)
-        self.set_segment(str(segment))
+        import pdb; pdb.set_trace()
+        self.set_rows()
+        self.set_cols()
+        self.set_squares()
+        while self.segment_keys:
+            segment_index = random.randint(0, len(self.segment_keys)-1)
+            segment = self.segment_keys.pop(segment_index)
+            self.set_segment(str(segment))
+        self.print_board()
 
     def get_segment_piece(self, game_segment, number_to_set):
         for key, value in game_segment:
