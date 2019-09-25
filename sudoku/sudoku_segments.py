@@ -34,6 +34,7 @@ class gameBoard(object):
         tile_col = self.get_segment_nums(self.col_dict[element.tile_elements['tileColumn']])
         tile_square = self.get_segment_nums(self.square_dict[element.tile_elements['tileSquare']])
         print (square_num, tile_col, tile_row, tile_square)
+        print(element.tile_elements['tileRow'], element.tile_elements['tileColumn'], element.tile_elements['tileSquare'])
         if square_num in tile_row:
             return True
         if square_num in tile_col:
@@ -141,7 +142,9 @@ class gameBoard(object):
             game_segment = self.square_dict[segment]
         segment_nums = self.get_segment_nums(game_segment)
         nums_to_set = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] 
+        
         while '0' in segment_nums:
+            import pdb; pdb.set_trace()
             choose_index = True
             
             set_num_index = random.randint(0, len(nums_to_set)-1)
@@ -151,9 +154,10 @@ class gameBoard(object):
             except:
                 print('set_num1')
                 import pdb; pdb.set_trace()
-            if set_num in segment_nums and set_num in nums_to_set:
+            if set_num in segment_nums:
                 try:
-                    nums_to_set.remove(set_num)
+                    if set_num in nums_to_set:
+                        nums_to_set.remove(set_num)
                 except:
                     print('nums to remove')
                     import pdb; pdb.set_trace()
@@ -172,8 +176,7 @@ class gameBoard(object):
             while choose_index:
                 choose_index = self.check_element(game_piece, set_num)
                 if not choose_index:
-                    if set_num in nums_to_set:
-                        nums_to_set.remove(set_num)
+                   
                     break
                 else:
                     set_num_index = random.randint(0, len(nums_to_set)-1)
@@ -181,15 +184,22 @@ class gameBoard(object):
                     try:
                         set_num = nums_to_set[set_num_index]
                         print ('in else', nums_to_set)
+                        #import pdb;pdb.set_trace()
                     except:
                         print('set num2')
                         import pdb; pdb.set_trace()
                     
             if game_piece.square_num == '0':
                 game_piece.square_num = set_num
+                if set_num in nums_to_set:
+                    #print ('im in here doc')
+                    #import pdb;pdb.set_trace()
+                    nums_to_set.remove(set_num)
             else:
                 if game_piece.square_num in nums_to_set:
                     nums_to_set.remove(game_piece.square_num)
+            print(nums_to_set)
+            self.print_board()
             segment_nums = self.get_segment_nums(game_segment)
 
     def print_board(self):
@@ -205,5 +215,5 @@ class gameBoard(object):
                 print(print_string)
                 print('\n')
                 print_string = ''
-        for tile in self.board_list:
-            print(tile.label, ':', tile.tile_elements)
+        #for tile in self.board_list:
+        #    print(tile.label, ':', tile.tile_elements)
