@@ -1,301 +1,246 @@
-import math
+import num_square as sq
+import sudoku_segments as sg
 import random
-import copy
 
-group_dict = {'r1': [[], list(range(1, 10))], 'r2': [[], list(range(1, 10))], 'r3': [[], list(range(1, 10))], 'r4': [[], list(range(1, 10))], 'r5': [[], list(range(1, 10))], 'r6': [[], list(range(1, 10))], 'r7': [[], list(range(1, 10))], 'r8': [[], list(range(1, 10))], 'r9': [[], list(range(1, 10))], 'c1': [[], list(range(1, 10))], 'c2': [[], list(range(1, 10))], 'c3': [[], list(range(1, 10))], 'c4': [[], list(range(1, 10))], 'c5': [[], list(range(1, 10))], 'c6': [[], list(range(1, 10))], 'c7': [[], list(range(1, 10))], 'c8': [[], list(range(1, 10))], 'c9': [[], list(range(1, 10))], 's1': [[], list(range(1, 10))], 's2': [[], list(range(1, 10))], 's3': [[], list(range(1, 10))], 's4': [[], list(range(1, 10))], 's5': [[], list(range(1, 10))], 's6': [[], list(range(1, 10))], 's7': [[], list(range(1, 10))], 's8': [[], list(range(1, 10))], 's9': [[], list(range(1, 10))]}
-base_dict = {}
-square_dict = {'s1': [], 's2': [], 's3': [], 's4': [], 's5': [], 's6': [], 's7': [], 's8': [], 's9': []}
+class gameBoard(object):
 
+    def __init__(self):
+        self.board_list = [sq.SoTile() for x in range(9*9)]
+        self.row_dict = {'r'+ str(num) : sg.SoSegment for num in range(1,10)}
+        self.col_dict = {'c'+ str(num) : sg.SoSegment for num in range(1,10)}
+        self.square_dict = {'s'+ str(num) : sg.SoSegment for num in range(1,10)}
+        self.segment_keys = []
 
-def create_squares():
+    def set_rows(self):
+        num_index = 1
+        for count, tile in enumerate(self.board_list):
+            row_num = 'r' + str(num_index)
+            import pdb; pdb.set_trace()
+            self.row_dict[row_num].append(tile)
+            if (count+1) % 9 == 0:
+                num_index += 1
 
-    global base_dict
+    def set_cols(self):
+        num_index = 1
+        for count, tile in enumerate(self.board_list):
+            col_num = 'c' + str(num_index)
+            self.col_dict[col_num].append(tile)
+            num_index += 1
+            if (count+1) % 9 == 0:
+                num_index = 1
 
-    label_string = 'abcdefghi'
-    col_number = 0
-    row_number = 0
-    square_number = 0
-    square_base = 1
-    for row in range(0, 9):
-        row_key = 'r' + str(row_number + 1)
-        square_number = square_base
-
-        for col in range(0, 9):
-            #print ('row num', row_number, label_string[row_number])
-            #print ('col num', col_number,label_string[col_number])
-            #print ('row key', row_key)
-            #print ('row', row)
-            #print ('col', col)
-            #print ('square base', square_base)
-            #print ('square num',square_number)
-            col_key = 'c' + str(col_number + 1)
-            square_key = 's' + str(square_number)
-            #print ('square key', square_key)
-            #print ('col key', col_key)
-            if col_key not in square_dict[square_key]:
-                square_dict[square_key].append(col_key)
-            if row_key not in square_dict[square_key]:
-                square_dict[square_key].append(row_key)
-            label = label_string[row_number] + label_string[col_number]
-            base_dict.update({label: [0, [square_key, col_key, row_key]]})
-            group_dict[row_key][0].append(label) 
-            group_dict[col_key][0].append(label)
-            group_dict[square_key][0].append(label)
-            #print ('initial',sorted(group_dict))
-            if (col + 1) == 9:
-                square_number = square_base
-            if (col + 1) % 3 == 0:
-                square_number += 1
-            col_number += 1
-
-        col_number = 0
-        row_number += 1
-        square_number += 3
-        #print('next square num', square_number)
-        #print('3 div', (row + 1) % 3)
-        if (row + 1) % 3 == 0:
-            square_base += 3
-            #print('base change', square_base)
+    
+    def check_element(self, element, square_num):
+        #import pdb; pdb.set_trace()
+        tile_row = self.get_segment_nums(self.row_dict[element.tile_elements['tileRow']])
+        tile_col = self.get_segment_nums(self.col_dict[element.tile_elements['tileColumn']])
+        tile_square = self.get_segment_nums(self.square_dict[element.tile_elements['tileSquare']])
+        print (square_num, tile_col, tile_row, tile_square)
+        print(element.tile_elements['tileRow'], element.tile_elements['tileColumn'], element.tile_elements['tileSquare'])
+        if square_num in tile_row:
+            return True
+        if square_num in tile_col:
+            return True
+        if square_num in tile_square:
+            return True
+        return False
 
 
-def remove_square_num(square_label, num):
 
-    element_list = square_dict[square_label]
+    def set_adjecent_elements(self, element):
+        #import pdb; pdb.set_trace()
+        element_num1 = element.label[0]
+        element_num2 = element.label[1]
+        element.tile_elements['tileRow'] = 'r' + element_num1
+        element.tile_elements['tileColumn'] = 'c' + element_num2
+        element_square = self.find_element_square(element.label)
+        element.tile_elements['tileSquare'] = element_square
 
-    for element in element_list:
-        if num in group_dict[element][1]:
-            group_dict[element][1].remove(num)
-
-
-def remove_num(element_label, num, element_called):
-
-    global group_dict, base_dict
-    #print('group dict', group_dict)
-    remove_list = base_dict[element_label][1]
-    #print ('remove', remove_list)
-    for element in remove_list:
-        #print('el list',group_dict[element][1])
-        if num in group_dict[element][1]:
-            group_dict[element][1].remove(num)
-            #print ('remove',sorted(group_dict))
-            #print('element lable1',element,num, element_label, group_dict[element])
-        #print('\n')
-        """
-        if element_label in group_dict[element][0] and num in group_dict[element][1]:
-
-            print('\n')
-            print('num', num)
-            print('num list', group_dict[element])
-
-            #print('el list', group_dict[element][0])
-
-            print('element lable2',element,num, element_label, element_called)
-            #print('num list after', group_dict[element])
-            temp_dict.update({element:group_dict[element]})
-            group_dict[element][1].remove(num)
-            #print('num list', group_dict[element][1])
-
-            #print('element lable after', element_label)
-        """
-    """
-    #print('remove dict', group_dict)
-    for key in temp_dict:
-        print ('temp dict',key,temp_dict[key])
-    """
+    def find_element_square(self, element_label):
+        element_num1 = int(element_label[0])
+        element_num2 = int(element_label[1])
+        if element_num2 <= 3:
+            if element_num1 <= 3:
+                return 's1'
+            elif element_num1 > 3 and element_num1 <= 6:
+                return 's4'
+            elif element_num1 > 6:
+                return 's7'
+        elif element_num2 > 3 and element_num2 <= 6:
+            if element_num1 <= 3:
+                return 's2'
+            elif element_num1 > 3 and element_num1 <= 6:
+                return 's5'
+            elif element_num1 > 6:
+                return 's8'
+        elif element_num2 > 6:
+            if element_num1 <= 3:
+                return 's3'
+            elif element_num1 > 3 and element_num1 <= 6:
+                return 's6'
+            elif element_num1 > 6:
+                return 's9'
 
 
-def get_squares(element):
 
-    element_square_list = []
-
-    for square in square_dict:
-
-        if element in square_dict[square]:
-
-            element_square_list.append(square) 
-
-    return element_square_list
-
-
-def set_game_squares():
-
-    global group_dict, base_dict
-    #print ('dict', group_dict)
-
-    temp_list = list(group_dict.keys())
-    print('temp list', temp_list)
-    while temp_list:
-
-        element_label_index = random.randint(0, len(temp_list)-1)
-        #print ('index', element_label_index, temp_list[element_label_index])
-        element_label = temp_list[element_label_index]
-        element = group_dict.get(element_label)[0]
-        #print ('get',sorted(group_dict))
-        #test_list = []
-
-        #for square in element:
-            #print (square)
-         #   test_list.append((base_dict[square][0],square)) 
-        #print('element',element_label, sorted(test_list))
-        #print('\n')
-
-        for square in element:
-
-            #print('square', base_dict[square])
-            #print (base_dict[square])
-            if base_dict[square][0] != 0:
-                if base_dict[square][0] in group_dict.get(element_label)[1]:
-                    group_dict[element_label][1].remove(base_dict[square][0])
-                    #print ('re',element_label[1])
-                    #print('index removed', group_dict.get(element_label)[1])
-                continue
-            else:
-                """
-                #print (group_dict)
-                #print('ex1',group_dict[base_dict[square][1][1]][1] )
-                #print('ex2',group_dict[base_dict[square][1][2]][1] )
-                #temp_list = []
-                compare_list = list(range(1,10))
-                #print('\n')
-                #print(group_dict[base_dict[square][1][1]][1])
-                #print('base',base_dict[square][1])
-                #print(group_dict[base_dict[square][1][0]])
-                #print(group_dict[base_dict[square][1][1]])
-                #print(group_dict[base_dict[square][1][2]])
-                #exclude_list = set(compare_list) - set(copy.deepcopy(group_dict[base_dict[square][1][1]][1]))
-                #list(exclude_list).extend(set(compare_list) - set(group_dict[base_dict[square][1][2]][1]))
-                dirty_exclude_list = copy.deepcopy(group_dict[base_dict[square][1][0]][1])
-                dirty_exclude_list.extend(copy.deepcopy(group_dict[base_dict[square][1][1]][1]))
-                dirty_exclude_list.extend(copy.deepcopy(group_dict[base_dict[square][1][2]][1]))
-                #print('dirty', dirty_exclude_list)
-                exclude_list = []
-                for num in dirty_exclude_list:
-                    if num not in exclude_list:
-                        exclude_list.append(num)
-                #print ('clean',exclude_list)
-                exclude_list = set(compare_list) - set(exclude_list)
-                #print ('exclude',exclude_list)
-                #exclude_list = [temp_list.append(n) for n in exclude_list if n not in temp_list]
-                #print('exclude1',exclude_list)
-                square_index = random.randint(0,len(group_dict[element_label][1])-1)
-                square_number = group_dict.get(element_label)[1][square_index]
-                count = 0
-                while True:
-                    #print('\n')
-                    #print ('count', count)
-                    count += 1
-                    if count >= 100:
-                       break
-                    #print ('label',element_label,element_label[0] )
-                    if element_label[0] != 's':
-                        #print('\n')
-                        #print('break')
+    def set_squares(self):
+        num_index = 1
+        square_base = 1
+        for count, tile in enumerate(self.board_list):
+            square_num = 's' + str(num_index)
+            self.square_dict[square_num].append(tile)
+            if (count+1) % 3 == 0:
+                num_index += 1
+            if (count+1) % 9 == 0:
+                num_index = square_base
+            if (count+1) % 27 == 0:
+                square_base += 3
+                num_index = square_base
 
 
-                        break
+    def set_square_labels(self):
+        row_num = 1
+        col_num = 1
+        for square in self.board_list:
+            square.label = str(row_num) + str(col_num)
+            self.set_adjecent_elements(square)
+            col_num += 1
+            if col_num % 10 == 0:
+                col_num = 1
+                row_num += 1
 
-                    else:
 
-                        #print('\n')
-                        #print ('else')
+    def set_board(self):
+        self.set_square_labels()
+        self.segment_keys = [x for x in self.row_dict.keys()]
+        self.segment_keys.extend([x for x in self.col_dict.keys()])
+        self.segment_keys.extend([x for x in self.square_dict.keys()])
+        self.set_rows()
+        self.set_cols()
+        self.set_squares()
+        while self.segment_keys:
+            segment_index = random.randint(0, len(self.segment_keys)-1)
+            segment = self.segment_keys[segment_index]
+            is_set = self.set_segment(str(segment))
+            if is_set == True:
+                self.segment_keys.remove(segment)
+        self.print_board()
 
-                        if square_number in exclude_list:
+    def get_segment_piece(self, game_segment, number_to_set):
+        for key, value in game_segment:
+            if key[1] == number_to_set:
+                return value
 
+    def get_segment_nums(self, segment):
+        num_list = []
+        for tile in segment:
+            num_list.append(tile.square_num)
+        return num_list
 
-                            #print('number', square_number)
-
-                        else:
-
-                            break
-                """
-                exclude_list = list(set(list(range(1, 10))) - set(group_dict[base_dict[square][1][0]][1]))
-                print('exclude', exclude_list)
-                print(element_label, base_dict[square][1][0])
-                while True:
-                    if len(exclude_list) == 9:
-                        import pdb; pdb.set_trace()
-                    square_index = random.randint(0, len(group_dict.get(element_label)[1])-1)
-                    square_number = group_dict.get(element_label)[1][square_index]
-                    if square_number not in exclude_list:
-                        break
-                    print('exclude', exclude_list)
-                    print(len(group_dict.get(element_label)[1])-1, group_dict[element_label][1])
-                    print(square_number)
-                temp = ''
-                col_count = 0
-                row_count = 0
-                square_count = 0
-                #print('random',group_dict.get(element_label)[1][0],group_dict.get(element_label)[1][-1] )
-                #print(group_dict.get(element_label)[1])
-                #print('rand2', square_index)
-                #print('ex list',base_dict[square])
-                #print('exclude',exclude_list)
-
-                #print('square number', square_number)
-
-                base_dict[square][0] = square_number
-                #print('square 1',element_label,element_label[0])
-                #print(group_dict[element_label][1])
-                remove_num(square, square_number, element_label)
-                #if element_label[0] == 's':
-                    #print ('square label', element_label, element_label[0])
-                    #remove_square_num(square,square_number)
-                #group_dict[element_label][1].remove(square_number)
+    def set_segment(self, segment):
+        if segment[0] == 'r':
+            game_segment = self.row_dict[segment]
+        elif segment[0] == 'c':
+            game_segment = self.col_dict[segment]
+        else:
+            game_segment = self.square_dict[segment]
+        segment_nums = self.get_segment_nums(game_segment)
+        nums_to_set = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] 
+        clr_list = []
+        count = 0
+        while '0' in segment_nums:
+            
+            #import pdb; pdb.set_trace()
+            choose_index = True
+            
+            set_num_index = random.randint(0, len(nums_to_set)-1)
+            #print(nums_to_set, len(nums_to_set)-1,set_num_index)
+            try:
+                set_num = nums_to_set[set_num_index]
+            except:
+                print('set_num1')
                 import pdb; pdb.set_trace()
-                for key in base_dict:
+            if set_num in segment_nums:
+                try:
+                    if set_num in nums_to_set:
+                        nums_to_set.remove(set_num)
+                except:
+                    print('nums to remove')
+                    import pdb; pdb.set_trace()
+            
+            
+            try:
+                piece_to_set = random.randint(0, 8)
+                game_piece = game_segment[int(piece_to_set)]
+                while game_piece.square_num != '0':
+                    #import pdb; pdb.set_trace()
+                    piece_to_set = random.randint(0, 8)
+                    game_piece = game_segment[int(piece_to_set)]
+            except Exception:
+                #import pdb; pdb.set_trace()
+                print('error!')
+            while choose_index:
+                count += 1
+                choose_index = self.check_element(game_piece, set_num)
+                if not choose_index:
+                   
+                    break
+                else:
+                    set_num_index = random.randint(0, len(nums_to_set)-1)
+                    #print(nums_to_set, len(nums_to_set)-1,set_num_index)
+                    try:
+                        set_num = nums_to_set[set_num_index]
+                        print ('in else', nums_to_set)
+                        #import pdb;pdb.set_trace()
+                    except:
+                        print('set num2')
+                        import pdb; pdb.set_trace()
+                    print ('count',count)
+                    if count > 9:
+                        break
+            if count > 9:
+                print('\nclear\n')
+                count = 0
+                self.clear_element(clr_list)
+                return False
+            if game_piece.square_num == '0':
+                game_piece.square_num = set_num
+                clr_list.append(game_piece)
+                print('clist  ',clr_list)
+                c_list = []
+                for clr in clr_list:
+                    c_list.append(clr.square_num)
+                print(c_list)
+                if set_num in nums_to_set:
+                    #print ('im in here doc')
+                    #import pdb;pdb.set_trace()
+                    nums_to_set.remove(set_num)
+            else:
+                if game_piece.square_num in nums_to_set:
+                    nums_to_set.remove(game_piece.square_num)
+            print(nums_to_set)
+            self.print_board()
+            segment_nums = self.get_segment_nums(game_segment)
+        return True
 
-                    #print('row count', row_count)
-                    col_count += 1
-                    temp = temp + ' ' + key + ' ' + str(base_dict[key][0])
-                    #print ('temp', temp)
-                    #print('col 3', col_count %3)
-                    #print('col count', col_count)
-                    if col_count %3 == 0:
-                        #print('roger roger')
-                        temp = temp + '   '
-                    if col_count == 9:
-                        #print('col 9')
-                        #print('count = 9')
-                        print(temp)
-                        col_count = 0
-                        row_count += 1
-                        temp = ''
-                        if row_count % 3 == 0:
-                            square_count += 1
-                            row_count = 0
-                            if square_count % 3 == 0:
-                                square_count = 0
-                                print('--------------------------------------------')
-                                continue
-                            print('\n')
+
+    def clear_element(self, clr_list):
+        for game_piece in clr_list:
+            game_piece.square_num = 0
 
 
-
-            #print('square2', base_dict[square])
-        #break
-        test_list = []
-        for square in element:
-
-            test_list.append((base_dict[square],square))
-        #print('element',element_label, sorted(test_list))
-        #print('\n')
-        #print('element after', test_list)       
-        #print ('element', element)
-
-        temp_list.remove(temp_list[element_label_index])
-#print (sorted(group_dict))
-
-
-create_squares()
-set_game_squares()
-
-#for key in group_dict:
-    #print (key,group_dict[key])
-#print ('\n')
-#print('base dict print')
-#print ('\n')
-
-print_num = 1
-for num in range(0, 9):
-    #print ('s' + str(print_num),len(group_dict['s' + str(print_num)][0]))
-    print_num += 1
+    def print_board(self):
+        print_string = ''
+        for count, square in enumerate(self.board_list):
+            print_string += ' ' + str(square) + ' '
+            if (count+1) % 3 == 0 and (count+1) % 9 != 0:
+                print_string += '  '
+            if (count+1) % 9 == 0:
+                print(print_string)
+                print_string = ''
+            if (count+1) % 27 == 0:
+                print(print_string)
+                print('\n')
+                print_string = ''
+        #for tile in self.board_list:
+        #    print(tile.label, ':', tile.tile_elements)

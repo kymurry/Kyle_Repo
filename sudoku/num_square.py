@@ -2,7 +2,7 @@ class SoTile(object):
 
     def __init__(self):
         self.test = True
-        self.square_num = '0'
+        self.square_num = 0
         self.label = None
 
         self.tile_elements = {'tileRow':None, 'tileColumn':None, 'tileSquare':None}
