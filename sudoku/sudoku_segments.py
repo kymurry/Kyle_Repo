@@ -5,7 +5,15 @@ class SoSegment(object):
         self.myList = []
 
     def append(self,element):
-        self.myList.append(element)
+        self._myList.append(element)
+
+    @property
+    def myList(self):
+        return [x.square_num for x in self._myList]
+
+    @myList.setter
+    def myList(self,container):
+        self._myList = container
 
     def __str__(self):
         if not self.myList:
