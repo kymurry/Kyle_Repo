@@ -10,7 +10,9 @@ class gameBoard(object):
         self.col_dict = {'c'+ str(num) : sg.SoSegment() for num in range(1,10)}
         self.square_dict = {'s'+ str(num) : sg.SoSegment() for num in range(1,10)}
         self.segment_keys = []
+        self.nums_to_set = []
     
+
     def print(self,element):
         if isinstance(element,list):
             print(*element)
@@ -27,6 +29,7 @@ class gameBoard(object):
             if (count+1) % 9 == 0:
                 num_index += 1
 
+
     def set_cols(self):
         num_index = 1
         for count, tile in enumerate(self.board_list):
@@ -37,31 +40,41 @@ class gameBoard(object):
                 num_index = 1
 
     
-    def check_element(self, element, square_num):
-        #import pdb; pdb.set_trace()
+    def check_element(self, element, square_num, return_segment = False):
         tile_row = self.row_dict[element.tile_elements['tileRow']].myList
         tile_col = self.col_dict[element.tile_elements['tileColumn']].myList
         tile_square = self.square_dict[element.tile_elements['tileSquare']].myList
-        print (square_num, tile_col, tile_row, tile_square)
+        el_check = False
+        check_list = []
+        print (element.label,square_num, tile_row, tile_col, tile_square)
         print(element.tile_elements['tileRow'], element.tile_elements['tileColumn'], element.tile_elements['tileSquare'])
+        if square_num == 0:
+            print('Zero')
+            return (el_check, None)
         if square_num in tile_row:
-            return True
+            el_check = True
+            if return_segment:
+                check_list.append(element.tile_elements['tileRow'])
         if square_num in tile_col:
-            return True
+            el_check = True
+            if return_segment:
+                check_list.append(element.tile_elements['tileColumn'])
         if square_num in tile_square:
-            return True
-        return False
-
+            el_check = True
+            if return_segment:
+                check_list.append(element.tile_elements['tileSquare'])
+        print(el_check)
+        return (el_check, None) if not check_list else (el_check, check_list)
 
 
     def set_adjecent_elements(self, element):
-        #import pdb; pdb.set_trace()
         element_num1 = element.label[0]
         element_num2 = element.label[1]
         element.tile_elements['tileRow'] = 'r' + element_num1
         element.tile_elements['tileColumn'] = 'c' + element_num2
         element_square = self.find_element_square(element.label)
         element.tile_elements['tileSquare'] = element_square
+
 
     def find_element_square(self, element_label):
         element_num1 = int(element_label[0])
@@ -87,7 +100,6 @@ class gameBoard(object):
                 return 's6'
             elif element_num1 > 6:
                 return 's9'
-
 
 
     def set_squares(self):
@@ -118,6 +130,7 @@ class gameBoard(object):
 
 
     def set_board(self):
+        #import pdb; pdb.set_trace()
         self.set_sotile_labels()
         self.segment_keys = list(self.row_dict.keys())
         self.segment_keys.extend(list(self.col_dict.keys()))
@@ -128,101 +141,119 @@ class gameBoard(object):
         while self.segment_keys:
             segment_index = random.randint(0, len(self.segment_keys)-1)
             segment = self.segment_keys[segment_index]
+            print('******')
+            print('*',segment,'*')
+            print('******')
             is_set = self.set_segment(str(segment))
             if is_set == True:
                 self.segment_keys.remove(segment)
         self.print_board()
+    
 
-    def get_segment_piece(self, game_segment, number_to_set):
-        for key, value in game_segment:
-            if key[1] == number_to_set:
-                return value
+    def swap_tiles(self,itteration,sotile,num_to_set,set_segment_label):
+        if itteration >= 3:
+            import pdb; pdb.set_trace()
+            return 0
+        tile_square_label = sotile.tile_elements['tileSquare']
+        tile_square = self.get_game_segment(tile_square_label)
+        segment = self.get_game_segment(set_segment_label)
+        tile_list = segment.get_sotiles(-1)
+        tile_list.remove(sotile)
+        print('set segment',set_segment_label,itteration)
+        for tile in tile_list:
+            self.print_board()
+            temp = tile.square_num
+            tile.square_num = 0
+            tile1_check = self.check_element(tile,num_to_set)
+            print('tile1',tile1_check,temp,num_to_set)
+            if tile1_check:
+                tile.square_num = temp
+                continue
+            else:
+                tile2_check = self.check_element(sotile,temp)
+                print('tile2',tile2_check,sotile.square_num,temp)
+                if tile2_check:
+                    tile.square_num = temp
+                    continue
+                else:
+                    #import pdb; pdb.set_trace()
+                    print('num switch',tile.label,temp,num_to_set)
+                    tile.square_num = num_to_set
+                    
+                    self.nums_to_set.remove(num_to_set)
+                    self.print_board()
+                    return temp
+        if num_to_set in tile_square.myList:
+            square_tile_index = tile_square.myList.index(num_to_set)
+            sotile.square_num = num_to_set
+            square_tile_check = self.check_element
+        #return self.swap_tiles(itteration+1,sotile,num_to_set,set_segment_label)
+        
 
-    def get_segment_nums(self, segment):
-        num_list = []
-        for tile in segment:
-            num_list.append(tile.square_num)
-        return num_list
+    #def swap_tiles(self,itteration,sotile,num_to_set,set_segment_label):
+
+
+    def get_game_segment(self,segment_label):
+        if segment_label[0] == 'r':
+            return self.row_dict[segment_label]
+        elif segment_label[0] == 'c':
+            return self.col_dict[segment_label]
+        else:
+            return self.square_dict[segment_label]
+
 
     def set_segment(self, segment):
-        if segment[0] == 'r':
-            game_segment = self.row_dict[segment]
-        elif segment[0] == 'c':
-            game_segment = self.col_dict[segment]
-        else:
-            game_segment = self.square_dict[segment]
+        game_segment = self.get_game_segment(segment)
         segment_nums = game_segment.myList
-        all_nums = [x for x in range(1,9)]
-        nums_to_set =  list(set(all_nums) - set(segment_nums))
-        clr_list = []
-        count = 0
+        all_nums = [x for x in range(1,10)]
+        self.nums_to_set =  list(set(all_nums) - set(segment_nums))
+        zero_list = [x for x in game_segment.get_sotiles(-1) if x.square_num == 0]
         
-        while 0 in segment_nums:
-            
-            
-            choose_index = True
-            set_num = nums_to_set.pop(random.choice(nums_to_set))         
-            try:
-                piece_to_set = random.randint(0, 8)
-                game_piece = game_segment[piece_to_set]
-                while game_piece.square_num != 0:
-                    #import pdb; pdb.set_trace()
-                    piece_to_set = random.randint(0, 8)
-                    game_piece = game_segment[piece_to_set]
-            except Exception:
+        while zero_list:
+            check_list = []
+            print('nums',self.nums_to_set,segment_nums)
+            set_num = random.choice(self.nums_to_set)
+            game_piece_found = False
+            while not game_piece_found:
+                #if len(set(check_list)) >= 9:
+                 #   break
+                #piece_to_set = random.randint(0, 8)
                 #import pdb; pdb.set_trace()
-                print('error!')
-            while choose_index:
-                count += 1
-                choose_index = self.check_element(game_piece, set_num)
-                if not choose_index:
-                   
+                game_piece = random.choice(zero_list)#game_segment.get_sotiles(piece_to_set)
+                print('check list',[x.label for x in check_list],[x.label for x in zero_list])
+                if len(check_list) == len(zero_list):
                     break
+                if game_piece in check_list:
+                    continue
+                check_list.append(game_piece)
+                #if game_piece.square_num != 0:
+                #    continue
+                segment_check = self.check_element(game_piece, set_num)
+                print(game_piece,game_piece.label,segment_check,set_num)
+                if segment_check:
+                    continue
                 else:
-                    set_num_index = random.randint(0, len(nums_to_set)-1)
-                    #print(nums_to_set, len(nums_to_set)-1,set_num_index)
-                    try:
-                        set_num = nums_to_set[set_num_index]
-                        print ('in else', nums_to_set)
-                        #import pdb;pdb.set_trace()
-                    except:
-                        print('set num2')
-                        import pdb; pdb.set_trace()
-                    print ('count',count)
-                    if count > 9:
-                        break
-            if count > 9:
-                print('\nclear\n')
-                count = 0
-                self.clear_element(clr_list)
-                return False
-            if game_piece.square_num == '0':
-                game_piece.square_num = set_num
-                clr_list.append(game_piece)
-                print('clist  ',clr_list)
-                c_list = []
-                for clr in clr_list:
-                    c_list.append(clr.square_num)
-                print(c_list)
-                if set_num in nums_to_set:
-                    #print ('im in here doc')
-                    #import pdb;pdb.set_trace()
-                    nums_to_set.remove(set_num)
-            else:
-                if game_piece.square_num in nums_to_set:
-                    nums_to_set.remove(game_piece.square_num)
-            print(nums_to_set)
+                    game_piece_found = True
+            if not game_piece_found:
+                set_num = self.swap_tiles(0,game_piece,set_num,segment)
+                #if set_num == None:
+                    #import pdb; pdb.set_trace()
+                if set_num == 0:
+                    continue
+                
+            print('game piece',game_piece.label)
+            game_piece.square_num = set_num
+            print('num remove',self.nums_to_set,set_num)
+            if set_num in self.nums_to_set: self.nums_to_set.remove(set_num)
+            zero_list.remove(game_piece)
+            print(self.nums_to_set)
             self.print_board()
-            segment_nums = self.get_segment_nums(game_segment)
+            segment_nums = game_segment.myList
         return True
-        
-
-    def clear_element(self, clr_list):
-        for game_piece in clr_list:
-            game_piece.square_num = 0
 
 
     def print_board(self):
+        print('*************************************************************************************************************************************')
         print_string = ''
         for count, square in enumerate(self.board_list):
             print_string += ' ' + str(square) + ' '
@@ -235,5 +266,6 @@ class gameBoard(object):
                 print(print_string)
                 print('\n')
                 print_string = ''
+        print('*************************************************************************************************************************************')
         #for tile in self.board_list:
         #    print(tile.label, ':', tile.tile_elements)

@@ -222,7 +222,7 @@ def showBoard():
             picture.width = 15
             mineDict[tile.label] = picture
         
-        tileButton = PushButton(board, command=playGame, image = 'blank.jpg' , args=[tile], grid=[columnCount,rowCount], text='')#str(tile)#.isMined))#str(tile))
+        tileButton = PushButton(board, command=playGame, image = "blank.jpg" , args=[tile], grid=[columnCount,rowCount], text='')#str(tile)#.isMined))#str(tile))
         tileButton.bg = 'gray60'
         #print ('button grid', tileButton.grid)
         tileButton.when_right_button_pressed = markTile
